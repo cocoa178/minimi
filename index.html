@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>minimi</title>
+    <meta name="theme-color" content="#B1D9D4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header-bar" id="appHeaderBar">
+            <div class="header-left">
+                <div class="menu-icon" onclick="toggleMenu()"><span></span><span></span><span></span></div>
+                <div class="search-wrapper memo-only">
+                    <input type="text" class="app-search-input" placeholder="검색" id="searchInput" oninput="handleSearch()">
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="view-toggle-icon memo-only" id="viewToggleIcon" onclick="cycleViewMode()">
+                    <span></span><span></span>
+                </div>
+                <svg class="calendar-icon memo-only" id="calendarIcon" onclick="toggleCalendarMode()" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="4" width="18" height="18" rx="2" stroke="#888" stroke-width="2.5"/>
+                    <line x1="3" y1="10" x2="21" y2="10" stroke="#888" stroke-width="2.5"/>
+                    <line x1="8" y1="2" x2="8" y2="6" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="16" y1="2" x2="16" y2="6" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <div class="profile-pic" onclick="showPage('settings')">🐰</div>
+            </div>
+        </header>
+        
+        <!-- 메모 페이지 -->
+        <main class="main-content page active" id="page-memo">
+            <!-- 일반 메모 뷰 -->
+            <div id="memoNormalView">
+                <div class="cards-compact" id="memoContainer"></div>
+            </div>
+            <!-- 캘린더 모드 -->
+            <div id="memoCalendarView" class="daily-layer-mode">
+                <div class="daily-calendar">
+                    <div class="daily-calendar-header">
+                        <span onclick="prevMemoMonth()" style="cursor:pointer;">◀</span>
+                        <span id="memoCalendarTitle">2026년 1월</span>
+                        <span onclick="nextMemoMonth()" style="cursor:pointer;">▶</span>
+                    </div>
+                    <div class="daily-calendar-grid" id="memoCalendarGrid"></div>
+                </div>
+                <!-- 선택된 날짜 정보 -->
+                <div id="selectedDayInfo">
+                    <div class="daily-date-header" id="selectedDateHeader"></div>
+                    <!-- 일정 섹션 -->
+                    <div class="daily-events-section" id="dailyEventsSection"></div>
+                    <!-- 새 이벤트 추가 버튼 -->
+                    <div class="add-event-btn" onclick="openEventModal()">
+                        <span>+</span>
+                        <span>새로운 이벤트</span>
+                    </div>
+                    <!-- 투두리스트 -->
+                    <div class="todo-section">
+                        <div class="todo-section-header" onclick="toggleTodoSection()">
+                            <span class="todo-section-title">투두리스트</span>
+                            <span class="todo-toggle-arrow" id="todoArrow">▼</span>
+                        </div>
+                        <div class="todo-content" id="todoContent">
+                            <div class="todo-input-row">
+                                <input type="text" id="todoInput" placeholder="할 일 추가..." onkeypress="handleTodoKeypress(event)">
+                                <button onclick="addTodo()">+</button>
+                            </div>
+                            <div class="todo-list" id="todoList"></div>
+                        </div>
+                    </div>
+                    <!-- 해당 날짜 메모 -->
+                    <div class="memo-list-below-calendar" id="dailyMemosContainer"></div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 아카이브 페이지 -->
+        <main class="main-content page" id="page-archive">
+            <div class="archive-tabs">
+                <div class="archive-tab active" onclick="switchArchiveTab('content', this)">컨텐츠</div>
+                <div class="archive-tab" onclick="switchArchiveTab('media', this)">미디어</div>
+                <div class="archive-tab" onclick="switchArchiveTab('place', this)">플레이스</div>
+            </div>
+            
+            <!-- 컨텐츠 탭: 카테고리별 건수 + 썸네일 -->
+            <div class="archive-content" id="archiveContentTab">
+                <div class="archive-category" id="archiveCatBooks" onclick="showContentCalendar('book')">
+                    <div class="archive-category-header">
+                        <span class="archive-category-title">책</span>
+                        <span class="archive-category-count" id="bookCount">> 0건</span>
+                    </div>
+                    <div class="archive-thumbnails" id="bookThumbs"></div>
+                </div>
+                <div class="archive-category" id="archiveCatMovies" onclick="showContentCalendar('movie')">
+                    <div class="archive-category-header">
+                        <span class="archive-category-title">영화</span>
+                        <span class="archive-category-count" id="movieCount">> 0건</span>
+                    </div>
+                    <div class="archive-thumbnails" id="movieThumbs"></div>
+                </div>
+                <div class="archive-category" id="archiveCatTV" onclick="showContentCalendar('tv')">
+                    <div class="archive-category-header">
+                        <span class="archive-category-title">TV</span>
+                        <span class="archive-category-count" id="tvCount">> 0건</span>
+                    </div>
+                    <div class="archive-thumbnails" id="tvThumbs"></div>
+                </div>
+                <div class="archive-category" id="archiveCatMusic" onclick="showContentCalendar('music')">
+                    <div class="archive-category-header">
+                        <span class="archive-category-title">음악</span>
+                        <span class="archive-category-count" id="musicCount">> 0건</span>
+                    </div>
+                    <div class="archive-thumbnails" id="musicThumbs"></div>
+                </div>
+            </div>
+            
+            <!-- 미디어 탭: 사진 그리드 -->
+            <div class="archive-content" id="archiveMediaTab" style="display:none;">
+                <div class="media-grid" id="mediaGrid"></div>
+            </div>
+            
+            <!-- 플레이스 탭 -->
+            <div class="archive-content" id="archivePlaceTab" style="display:none;">
+                <div class="place-list" id="placeList"></div>
+            </div>
+            
+            <!-- 컨텐츠 캘린더 뷰 (썸네일 표시) -->
+            <div class="content-calendar" id="contentCalendar" style="display:none;">
+                <div class="content-calendar-back" onclick="hideContentCalendar()">← 뒤로</div>
+                <div class="content-calendar-title-bar">
+                    <span id="contentCalendarTitle">책</span>
+                </div>
+                <div class="content-calendar-header">
+                    <span onclick="prevContentMonth()" style="cursor:pointer;">&lt;</span>
+                    <span id="contentMonthTitle">2026.01</span>
+                    <span onclick="nextContentMonth()" style="cursor:pointer;">&gt;</span>
+                </div>
+                <div class="content-calendar-grid" id="contentCalendarGrid"></div>
+            </div>
+        </main>
+        
+        <!-- Lab 페이지 -->
+        <main class="main-content page" id="page-lab">
+            <div class="archive-tabs">
+                <div class="archive-tab active" onclick="switchLabTab('emotion', this)">
+                    <svg width="22" height="20" viewBox="0 0 24 22" fill="#EF4444" style="vertical-align:middle;">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        <path d="M3 11 L7 11 L9 6 L11 15 L13 8 L15 11 L21 11" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div class="archive-tab" onclick="switchLabTab('timer', this)">집중 타이머</div>
+                <div class="archive-tab" onclick="switchLabTab('report', this)">리포터M</div>
+            </div>
+            <div class="lab-content">
+                <div class="lab-tab-content active" id="tab-emotion">
+                    <div class="collapsible-section">
+                        <div class="collapsible-header" onclick="toggleSection('emotionGraph')">
+                            <span class="collapsible-title">감정 그래프</span>
+                            <span class="collapsible-arrow" id="emotionGraphArrow">▼</span>
+                        </div>
+                        <div class="collapsible-content open" id="emotionGraphContent">
+                            <div class="emotion-line-chart" id="emotionLineChart"></div>
+                        </div>
+                    </div>
+                    <div class="collapsible-section">
+                        <div class="collapsible-header" onclick="toggleSection('emotionSettings')">
+                            <span class="collapsible-title">설정</span>
+                            <span class="collapsible-arrow" id="emotionSettingsArrow">▼</span>
+                        </div>
+                        <div class="collapsible-content open" id="emotionSettingsContent">
+                            <div class="setting-row"><span class="setting-label">기간</span><select id="graphPeriod" onchange="renderEmotionGraph()" class="setting-select"><option value="7">1주일</option><option value="14" selected>2주일</option><option value="30">1개월</option></select></div>
+                            <div class="setting-row"><span class="setting-label">스타일</span><select id="graphStyle" onchange="renderEmotionGraph()" class="setting-select"><option value="line">꺾은선</option><option value="bar">막대</option></select></div>
+                        </div>
+                    </div>
+                    <div class="collapsible-section">
+                        <div class="collapsible-header" onclick="toggleSection('emotionDetail')">
+                            <span class="collapsible-title">세부사항</span>
+                            <span class="collapsible-arrow" id="emotionDetailArrow">▼</span>
+                        </div>
+                        <div class="collapsible-content open" id="emotionDetailContent">
+                            <div class="emotion-date-selector">
+                                <button onclick="changeEmotionDate(-1)">◀</button>
+                                <span id="emotionDateDisplay"></span>
+                                <button onclick="changeEmotionDate(1)">▶</button>
+                            </div>
+                            <div class="emotion-input-table-container">
+                                <table class="emotion-input-table"><thead><tr><th>시간</th><th>감정</th><th>사유</th></tr></thead><tbody id="emotionInputTableBody"></tbody></table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lab-tab-content" id="tab-timer">
+                    <div class="timer-display"><div class="timer-time" id="timerDisplay">25:00</div><div class="timer-label" id="timerLabel">집중 시간</div><div class="timer-controls"><button class="timer-btn primary" id="timerStartBtn" onclick="toggleTimer()">시작</button><button class="timer-btn secondary" onclick="resetTimer()">리셋</button></div></div>
+                    <div class="report-card"><div class="report-card-title">오늘의 집중</div><div class="report-stat" id="todayFocusTime">0분</div><div class="report-stat-sub" id="todayFocusCount">0회 완료</div></div>
+                </div>
+                <div class="lab-tab-content" id="tab-report">
+                    <div class="report-period-selector"><button class="period-btn active" data-period="daily" onclick="selectPeriod('daily')">일간</button><button class="period-btn" data-period="weekly" onclick="selectPeriod('weekly')">주간</button><button class="period-btn" data-period="monthly" onclick="selectPeriod('monthly')">월간</button></div>
+                    <div class="report-card"><div class="report-card-title" id="reportPeriodLabel">오늘 작성한 기록</div><div class="report-stat" id="reportTotal">0개</div></div>
+                    <div class="report-card"><div class="report-card-title">평균 감정</div><div class="report-stat" id="reportEmotion">-</div><div class="report-stat-sub" id="reportEmotionDesc">기록된 감정이 없어요</div></div>
+                    <div class="report-card"><div class="report-card-title">자주 쓴 태그</div><div class="report-keywords" id="reportTags"></div></div>
+                    <div class="report-card"><div class="report-card-title">소비한 콘텐츠</div><div class="report-stat" id="reportContents">0개</div><div class="report-stat-sub" id="reportContentsDetail">책 0 · 영화 0 · TV 0</div></div>
+                    <div class="export-section"><div class="export-title">🤖 AI 분석 받기</div><div class="export-desc">Claude에게 분석을 요청할 수 있는 프롬프트를 생성합니다</div><button class="export-btn" onclick="openExportModal()">프롬프트 생성하기</button></div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 설정 페이지 -->
+        <main class="main-content page" id="page-settings">
+            <div class="settings-content">
+                <div class="settings-item"><div><div class="settings-label">데이터 백업</div><div class="settings-desc">JSON 파일로 내보내기</div></div><button class="settings-btn primary" onclick="exportData()">내보내기</button></div>
+                <div class="settings-item"><div><div class="settings-label">데이터 복원</div><div class="settings-desc">JSON 파일에서 가져오기</div></div><label class="settings-btn primary" style="cursor:pointer;">가져오기<input type="file" accept=".json" onchange="importData(event)" style="display:none;"></label></div>
+                <div class="settings-item"><div><div class="settings-label">전체 데이터 삭제</div><div class="settings-desc">모든 기록을 삭제합니다</div></div><button class="settings-btn danger" onclick="clearAllData()">삭제</button></div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 사이드 메뉴 -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()">
+        <div class="menu-sidebar" onclick="event.stopPropagation()">
+            <div class="menu-header"><span class="menu-logo">minimi</span><button class="menu-close" onclick="toggleMenu()">×</button></div>
+            <div class="menu-item" onclick="showPage('memo');toggleMenu();">📝 메모</div>
+            <div class="menu-item" onclick="showPage('archive');toggleMenu();">📚 아카이브</div>
+            <div class="menu-item" onclick="showPage('lab');toggleMenu();">📊 Lab</div>
+            <div class="menu-item" onclick="showPage('settings');toggleMenu();">⚙️ 설정</div>
+        </div>
+    </div>
+    
+    <!-- 모달들 -->
+    <div class="modal-overlay" id="addMemoModal"><div class="modal"><div class="modal-header"><span class="modal-title" id="memoModalTitle">새 메모</span><button class="modal-close" onclick="closeModal('addMemoModal')">×</button></div><div class="modal-body"><form onsubmit="saveMemo(event)"><div class="form-group"><label class="form-label">제목 (선택)</label><input type="text" class="form-input" id="memoTitle" placeholder="제목을 입력하세요"></div><div class="form-group"><label class="form-label">내용</label><textarea class="form-textarea" id="memoContent" placeholder="오늘 무슨 일이 있었나요?"></textarea></div><div class="form-group"><label class="form-label">태그</label><div class="tag-selector"><span class="tag-option active" data-tag="일상" onclick="selectMemoTag(this)">일상</span><span class="tag-option" data-tag="생각" onclick="selectMemoTag(this)">생각</span><span class="tag-option" data-tag="일" onclick="selectMemoTag(this)">일</span><span class="tag-option" data-tag="취미" onclick="selectMemoTag(this)">취미</span><span class="tag-option" data-tag="여행" onclick="selectMemoTag(this)">여행</span></div></div><button type="button" class="search-content-btn" onclick="openSearchModal()">🔍 책/영화/드라마/음악/장소 첨부하기</button><div class="attached-content" id="attachedContent" style="display:none;"><div class="attached-content-thumb" id="attachedThumb"></div><div class="attached-content-info"><div class="attached-content-title" id="attachedTitle"></div><div class="attached-content-meta" id="attachedMeta"></div></div><button type="button" class="attached-content-remove" onclick="removeAttachment()">×</button></div><div class="form-group"><label class="form-label">이미지 (선택)</label><label class="image-upload-area" id="imageUploadArea"><div class="upload-icon">📷</div><div class="upload-text">클릭해서 이미지 추가</div><input type="file" accept="image/*" onchange="handleImageUpload(event)" style="display:none;"></label></div><input type="hidden" id="editMemoId"><button type="submit" class="form-submit" id="memoSubmitBtn">저장</button></form></div></div></div>
+    <div class="modal-overlay" id="searchContentModal"><div class="modal"><div class="modal-header"><span class="modal-title">콘텐츠 검색</span><button class="modal-close" onclick="closeModal('searchContentModal')">×</button></div><div class="modal-body"><div class="search-tabs"><button class="search-tab active" data-type="book" onclick="selectSearchType('book')">📚 책</button><button class="search-tab" data-type="movie" onclick="selectSearchType('movie')">🎬 영화</button><button class="search-tab" data-type="tv" onclick="selectSearchType('tv')">📺 드라마</button><button class="search-tab" data-type="music" onclick="selectSearchType('music')">🎵 음악</button><button class="search-tab" data-type="place" onclick="selectSearchType('place')">📍 장소</button></div><div class="search-input-group"><input type="text" id="contentSearchInput" placeholder="검색어를 입력하세요" onkeypress="handleSearchKeypress(event)"><button onclick="searchContent()">검색</button></div><div class="search-results" id="searchResults"><div class="search-empty">검색어를 입력하세요</div></div></div></div></div>
+    <div class="modal-overlay" id="viewDetailModal"><div class="modal"><div class="modal-header"><span class="modal-title">메모 상세</span><button class="modal-close" onclick="closeModal('viewDetailModal')">×</button></div><div class="modal-body" id="detailContent"></div></div></div>
+    <div class="modal-overlay" id="addArchiveModal"><div class="modal"><div class="modal-header"><span class="modal-title">아카이브 추가</span><button class="modal-close" onclick="closeModal('addArchiveModal')">×</button></div><div class="modal-body"><form onsubmit="saveArchive(event)"><div class="form-group"><label class="form-label">카테고리</label><div class="archive-type-grid" id="archiveTypeGrid"></div></div><button type="button" class="search-content-btn" onclick="openArchiveSearchModal()">🔍 네이버에서 검색하기</button><div id="archiveSearchResult" style="display:none;"></div><div class="form-group"><label class="form-label">제목</label><input type="text" class="form-input" id="archiveTitle" placeholder="제목을 입력하세요" required></div><div class="form-group"><label class="form-label">메모 (선택)</label><textarea class="form-textarea" id="archiveNote" placeholder="감상평이나 메모를 남겨보세요" style="min-height:80px;"></textarea></div><input type="hidden" id="archiveImage"><input type="hidden" id="archiveAuthor"><input type="hidden" id="archiveDirector"><input type="hidden" id="archiveAddress"><button type="submit" class="form-submit">저장</button></form></div></div></div>
+    <div class="modal-overlay" id="exportModal"><div class="modal"><div class="modal-header"><span class="modal-title">Claude 분석 프롬프트</span><button class="modal-close" onclick="closeModal('exportModal')">×</button></div><div class="modal-body"><textarea class="export-textarea" id="exportContent" readonly></textarea><button class="copy-btn" onclick="copyExport()">📋 클립보드에 복사</button><p class="copy-success" id="copySuccess">✓ 복사되었습니다!</p></div></div></div>
+    <div class="modal-overlay" id="imageViewModal"><div class="image-view-modal" onclick="closeModal('imageViewModal')"><img id="imageViewImg" src="" alt=""><div class="image-view-info" id="imageViewInfo"></div></div></div>
+    
+    <!-- 이벤트 추가 모달 -->
+    <div class="modal-overlay" id="addEventModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span class="modal-title">새 이벤트</span>
+                <button class="modal-close" onclick="closeModal('addEventModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="saveEvent(event)">
+                    <div class="form-group">
+                        <div class="event-title-input">
+                            <div class="event-color-bar" id="eventColorBar"></div>
+                            <input type="text" class="form-input event-title" id="eventTitle" placeholder="제목" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="event-time-row">
+                            <div class="event-time-icon">🕐</div>
+                            <div class="event-time-inputs">
+                                <div class="event-date-display" id="eventDateDisplay"></div>
+                                <div class="event-time-selectors">
+                                    <select id="eventStartHour" class="time-select">
+                                        <option value="">시작</option>
+                                    </select>
+                                    <span>~</span>
+                                    <select id="eventEndHour" class="time-select">
+                                        <option value="">종료</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <label class="allday-toggle">
+                                <input type="checkbox" id="eventAllDay" onchange="toggleAllDay()">
+                                <span>하루 종일</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">이벤트 색상</label>
+                        <div class="color-palette" id="colorPalette"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">메모 (선택)</label>
+                        <textarea class="form-textarea" id="eventMemo" placeholder="메모" style="min-height:60px;"></textarea>
+                    </div>
+                    <input type="hidden" id="editEventId">
+                    <button type="submit" class="form-submit event-save-btn">✓ 저장</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
